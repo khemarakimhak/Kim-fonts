@@ -6,15 +6,12 @@
     <style>
         body { background: #ffe7e5; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .ui { background: white; padding: 15px; border-radius: 12px; width: 95%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 10px; box-sizing: border-box; }
-        
-        /* Switch Button Style */
         .switch-btn { 
             width: 100%; padding: 8px; background: #f0f0f0; color: #333; 
             border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; 
             font-size: 12px; font-weight: bold; cursor: pointer; text-decoration: none;
             display: block; text-align: center;
         }
-
         input[type="text"] { width: 100%; padding: 12px; font-size: 18px; border: 2px solid #1cb3b3; border-radius: 8px; box-sizing: border-box; }
         .slider-container { margin-top: 15px; display: flex; flex-direction: column; gap: 5px; }
         .slider-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #333; }
@@ -28,12 +25,11 @@
 
     <div class="ui">
         <a href="khmer.html" class="switch-btn">🇰🇭 SWITCH TO KHMER FONT</a>
-
         <input type="text" id="nameIn" placeholder="Type English Name..." oninput="draw()">
         
         <div class="slider-container">
-            <div class="slider-label"><span>Font Size</span> <span id="sizeVal">120px</span></div>
-            <input type="range" id="fontSize" min="10" max="300" value="120" oninput="draw()">
+            <div class="slider-label"><span>Font Size</span> <span id="sizeVal">100px</span></div>
+            <input type="range" id="fontSize" min="10" max="300" value="100" oninput="draw()">
         </div>
 
         <div id="fontStatus">Loading English Fonts...</div>
@@ -47,21 +43,18 @@
         const ctx = canvas.getContext('2d');
         let templateImg = null;
 
-        // PASTE YOUR BASE64 FOR TEMPLATE-01 HERE
-        const base64Template = "PASTE_YOUR_BASE64_HERE";
-
+        // Settings
         const cols = 4; 
-        const startX = 800; 
-        const startY = 830; 
-        const xGap = 1050;  
-        const yGap = 505;   
+        const startX = 400; 
+        const startY = 400; 
+        const xGap = 525;  
+        const yGap = 253;   
 
         async function loadFonts() {
             const status = document.getElementById('fontStatus');
             let loaded = 0;
             for (let i = 1; i <= 30; i++) {
                 const fontName = `f${i}`;
-                // Relative path for GitHub hosting
                 const fontUrl = `${fontName}.woff2?v=1`;
                 const font = new FontFace(fontName, `url(${fontUrl})`, { format: 'woff2' });
                 font.load().then((f) => {
@@ -75,8 +68,14 @@
 
         function init() {
             const img = new Image();
-            img.onload = () => { templateImg = img; canvas.width = img.width; canvas.height = img.height; draw(); };
-            img.src = base64Template;
+            img.onload = () => { 
+                templateImg = img; 
+                canvas.width = img.width; 
+                canvas.height = img.height; 
+                draw(); 
+            };
+            // Points to the file in your GitHub folder
+            img.src = "EName.jpg"; 
             loadFonts();
         }
         init();
