@@ -18,7 +18,7 @@
 
         .slider-container { margin-top: 15px; display: flex; flex-direction: column; gap: 5px; }
         .slider-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #333; }
-        input[type="range"] { width: 100%; cursor: pointer; accent-color: #1cb3b3; }
+        input[type="range"], select { width: 100%; cursor: pointer; accent-color: #1cb3b3; padding: 8px; border-radius: 8px; border: 1px solid #ccc; }
         
         .color-pickers { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
         .color-group { display: flex; flex-direction: column; gap: 8px; }
@@ -26,18 +26,7 @@
         .color-name-display { color: #1cb3b3; font-weight: bold; }
         
         .box-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 6px; }
-        
-        .color-box { 
-            width: 30px; 
-            height: 30px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            border: 1px solid #ddd; 
-            transition: transform 0.1s ease;
-            box-sizing: border-box;
-            position: relative;
-        }
-        .color-box:hover { transform: scale(1.1); z-index: 2; }
+        .color-box { width: 30px; height: 30px; border-radius: 6px; cursor: pointer; border: 1px solid #ddd; transition: transform 0.1s ease; box-sizing: border-box; }
         .color-box.active { border: 2px solid #1cb3b3; outline: 2px solid rgba(28, 179, 179, 0.3); }
 
         canvas { max-width: 100%; height: auto; border-radius: 5px; background: white; border: 1px solid #ccc; margin-top: 10px; }
@@ -49,6 +38,7 @@
 
     <div class="ui">
         <a href="khmer.html" class="switch-btn">🇰🇭 SWITCH TO KHMER FONT</a>
+        
         <div class="input-wrapper">
             <input type="text" id="nameIn" placeholder="Type English Name..." oninput="updateUI()">
             <button class="clear-btn" id="clearBtn" onclick="clearInput()">✕</button>
@@ -71,8 +61,15 @@
             </div>
         </div>
 
+        <div class="slider-container">
+            <div class="slider-label"><span>Select Font to Download</span></div>
+            <select id="fontSelect">
+                <option value="all">Download Full Sheet</option>
+            </select>
+        </div>
+
         <div id="fontStatus">Loading English Fonts...</div>
-        <button class="download-btn" onclick="download()">Download English Sheet</button>
+        <button class="download-btn" onclick="download()">Download Now</button>
     </div>
 
     <canvas id="c"></canvas>
@@ -83,24 +80,15 @@
         let templateImg = null;
 
         const colors = [
-            { hex: "#000000", name: "Black" },
-            { hex: "#1A48B8", name: "Dark Blue" },
-            { hex: "#5C2D09", name: "Chocolate" },
-            { hex: "#EBD554", name: "Gold" },
-            { hex: "#FFC4DB", name: "Pink" },
-            { hex: "#FFFFFF", name: "White" },
-            { hex: "#D4D4D4", name: "Gray" },
-            { hex: "#1AC44B", name: "Green" },
-            { hex: "#8B5AA1", name: "Lavender" },
-            { hex: "#83AB38", name: "Matcha" },
-            { hex: "#680EC9", name: "Purple" },
-            { hex: "#DBCFAD", name: "Wood" },
-            { hex: "#BCF4F5", name: "Light Blue" },
-            { hex: "#D1F5BC", name: "Light Green" },
-            { hex: "#FF69BF", name: "Dark Pink" },
-            { hex: "#FF9B17", name: "Orange" },
-            { hex: "#DE1010", name: "Red" },
-            { hex: "#FFFF1F", name: "Yellow" }
+            { hex: "#000000", name: "Black" }, { hex: "#1A48B8", name: "Dark Blue" },
+            { hex: "#5C2D09", name: "Chocolate" }, { hex: "#EBD554", name: "Gold" },
+            { hex: "#FFC4DB", name: "Pink" }, { hex: "#FFFFFF", name: "White" },
+            { hex: "#D4D4D4", name: "Gray" }, { hex: "#1AC44B", name: "Green" },
+            { hex: "#8B5AA1", name: "Lavender" }, { hex: "#83AB38", name: "Matcha" },
+            { hex: "#680EC9", name: "Purple" }, { hex: "#DBCFAD", name: "Wood" },
+            { hex: "#BCF4F5", name: "Light Blue" }, { hex: "#D1F5BC", name: "Light Green" },
+            { hex: "#FF69BF", name: "Dark Pink" }, { hex: "#FF9B17", name: "Orange" },
+            { hex: "#DE1010", name: "Red" }, { hex: "#FFFF1F", name: "Yellow" }
         ];
 
         const cols = 4; 
@@ -117,7 +105,6 @@
             const strokeContainer = document.getElementById('strokeColorGroup');
 
             colors.forEach((color) => {
-                // Font Color Boxes
                 const fBox = document.createElement('div');
                 fBox.className = 'color-box' + (color.hex === currentFontColor ? ' active' : '');
                 fBox.style.background = color.hex;
@@ -130,7 +117,6 @@
                 };
                 fontContainer.appendChild(fBox);
 
-                // Background Color (Stroke) Boxes
                 const sBox = document.createElement('div');
                 sBox.className = 'color-box' + (color.hex === currentStrokeColor ? ' active' : '');
                 sBox.style.background = color.hex;
@@ -145,10 +131,20 @@
             });
         }
 
+        function setupFontSelector() {
+            const selector = document.getElementById('fontSelect');
+            for (let i = 1; i <= 30; i++) {
+                let val = i < 10 ? '0' + i : i;
+                let opt = document.createElement('option');
+                opt.value = i - 1; 
+                opt.innerHTML = `Font E${val}`;
+                selector.appendChild(opt);
+            }
+        }
+
         function updateUI() {
             const input = document.getElementById('nameIn');
-            const clearBtn = document.getElementById('clearBtn');
-            clearBtn.style.display = input.value.length > 0 ? "block" : "none";
+            document.getElementById('clearBtn').style.display = input.value.length > 0 ? "block" : "none";
             draw();
         }
 
@@ -162,14 +158,13 @@
             let loaded = 0;
             for (let i = 1; i <= 30; i++) {
                 const fontName = `f${i}`;
-                const fontUrl = `${fontName}.woff2?v=1`;
-                const font = new FontFace(fontName, `url(${fontUrl})`, { format: 'woff2' });
+                const font = new FontFace(fontName, `url(${fontName}.woff2?v=1)`, { format: 'woff2' });
                 font.load().then((f) => {
                     document.fonts.add(f);
                     loaded++;
                     status.innerText = `🔄 Loaded: ${loaded}/30`;
                     if(templateImg) draw();
-                }).catch(err => console.log(fontName + " failed"));
+                }).catch(e => console.log(fontName + " failed"));
             }
         }
 
@@ -178,6 +173,7 @@
             img.onload = () => { templateImg = img; canvas.width = img.width; canvas.height = img.height; draw(); };
             img.src = "EName.jpg"; 
             setupColorPickers();
+            setupFontSelector();
             loadFonts();
         }
         init();
@@ -186,15 +182,12 @@
             if (!templateImg) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(templateImg, 0, 0);
-            
             const name = document.getElementById('nameIn').value;
             const baseSize = parseFloat(document.getElementById('fontSize').value);
             document.getElementById('sizeVal').innerText = baseSize + "px";
             if (!name) return;
             
-            ctx.textAlign = "center"; 
-            ctx.textBaseline = "middle";
-            ctx.lineJoin = "round";
+            ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.lineJoin = "round";
 
             for (let i = 0; i < 30; i++) {
                 let fontNum = i + 1;
@@ -207,32 +200,49 @@
                 if ([29].includes(fontNum)) currentFontSize = baseSize * 0.75;
                 
                 ctx.font = `${currentFontSize}px f${fontNum}`;
-
                 ctx.strokeStyle = currentStrokeColor;
                 ctx.lineWidth = currentFontSize * 0.25; 
-                ctx.shadowColor = "rgba(0, 0, 0, 0.35)"; 
-                ctx.shadowBlur = 10;                     
-                ctx.shadowOffsetX = 3;                    
-                ctx.shadowOffsetY = 3;                    
+                ctx.shadowColor = "rgba(0, 0, 0, 0.35)"; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
                 ctx.strokeText(name, posX, posY);
 
-                ctx.shadowColor = "transparent";
-                ctx.shadowBlur = 0;
-                ctx.shadowOffsetX = 0;
-                ctx.shadowOffsetY = 0;
-                ctx.fillStyle = currentFontColor;
+                ctx.shadowColor = "transparent"; ctx.fillStyle = currentFontColor;
                 ctx.fillText(name, posX, posY);
             }
         }
 
         function download() {
-            let fileName = document.getElementById('nameIn').value.trim() || "english_preview";
+            const selection = document.getElementById('fontSelect').value;
+            const name = document.getElementById('nameIn').value.trim() || "preview";
+            
+            if (selection === "all") {
+                const link = document.createElement('a');
+                link.download = name + '_full_sheet.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                return;
+            }
+
+            const index = parseInt(selection);
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+
+            const cropW = xGap; 
+            const cropH = yGap;
+            const cropX = startX + (col * xGap) - (cropW / 2);
+            const cropY = startY + (row * yGap) - (cropH / 2);
+
+            const tCanvas = document.createElement('canvas');
+            tCanvas.width = cropW; tCanvas.height = cropH;
+            const tCtx = tCanvas.getContext('2d');
+
+            tCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+
+            let fontLabel = (index + 1) < 10 ? '0' + (index + 1) : (index + 1);
             const link = document.createElement('a');
-            link.download = fileName + '.png'; 
-            link.href = canvas.toDataURL('image/png');
+            link.download = `${name}_E${fontLabel}.png`;
+            link.href = tCanvas.toDataURL('image/png');
             link.click();
         }
     </script>
 </body>
-</html>
 </html>
