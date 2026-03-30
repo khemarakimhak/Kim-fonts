@@ -19,6 +19,27 @@
         .slider-container { margin-top: 15px; display: flex; flex-direction: column; gap: 5px; }
         .slider-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #333; }
         input[type="range"] { width: 100%; cursor: pointer; accent-color: #22b9b9; }
+        
+        .color-pickers { display: flex; flex-direction: column; gap: 15px; margin-top: 15px; }
+        .color-group { display: flex; flex-direction: column; gap: 8px; }
+        .color-group label { font-size: 13px; font-weight: bold; color: #333; display: flex; justify-content: space-between; }
+        .color-name-display { color: #22b9b9; font-weight: bold; }
+        
+        .box-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 6px; }
+        
+        .color-box { 
+            width: 30px; 
+            height: 30px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            border: 1px solid #ddd; 
+            transition: transform 0.1s ease;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .color-box:hover { transform: scale(1.1); z-index: 2; }
+        .color-box.active { border: 2px solid #22b9b9; outline: 2px solid rgba(34, 185, 185, 0.3); }
+
         canvas { max-width: 100%; height: auto; border-radius: 5px; background: white; border: 1px solid #ccc; margin-top: 10px; }
         button.download-btn { width: 100%; padding: 12px; background: #22b9b9; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 15px; cursor: pointer; }
         #fontStatus { font-size: 11px; color: #22b9b9; margin-top: 8px; text-align: center; font-weight: bold; }
@@ -38,6 +59,20 @@
             <input type="range" id="fontSize" min="10" max="300" value="100" oninput="draw()">
         </div>
 
+        <div class="color-pickers">
+            <!-- Background Color (Moved to Top) -->
+            <div class="color-group">
+                <label>Background Color: <span id="bgName" class="color-name-display">White</span></label>
+                <div class="box-container" id="strokeColorGroup"></div>
+            </div>
+
+            <!-- Letter Color -->
+            <div class="color-group">
+                <label>Letter Color: <span id="fontName" class="color-name-display">Black</span></label>
+                <div class="box-container" id="fontColorGroup"></div>
+            </div>
+        </div>
+
         <div id="fontStatus">Loading Khmer Fonts...</div>
         <button class="download-btn" onclick="download()">Download Khmer Sheet</button>
     </div>
@@ -49,11 +84,68 @@
         const ctx = canvas.getContext('2d');
         let templateImg = null;
 
+        const colors = [
+            { hex: "#000000", name: "Black" },
+            { hex: "#1A48B8", name: "Dark Blue" },
+            { hex: "#5C2D09", name: "Chocolate" },
+            { hex: "#EBD554", name: "Gold" },
+            { hex: "#FFC4DB", name: "Pink" },
+            { hex: "#FFFFFF", name: "White" },
+            { hex: "#D4D4D4", name: "Gray" },
+            { hex: "#1AC44B", name: "Green" },
+            { hex: "#8B5AA1", name: "Lavender" },
+            { hex: "#83AB38", name: "Matcha" },
+            { hex: "#680EC9", name: "Purple" },
+            { hex: "#DBCFAD", name: "Wood" },
+            { hex: "#BCF4F5", name: "Light Blue" },
+            { hex: "#D1F5BC", name: "Light Green" },
+            { hex: "#FF69BF", name: "Dark Pink" },
+            { hex: "#FF9B17", name: "Orange" },
+            { hex: "#DE1010", name: "Red" },
+            { hex: "#FFFF1F", name: "Yellow" }
+        ];
+
         const cols = 4; 
         const startX = 380; 
-        const startY = 430; 
+        const startY = 410; 
         const xGap = 525;  
-        const yGap = 250;  
+        const yGap = 250; 
+
+        let currentFontColor = "#000000";
+        let currentStrokeColor = "#FFFFFF";
+
+        function setupColorPickers() {
+            const fontContainer = document.getElementById('fontColorGroup');
+            const strokeContainer = document.getElementById('strokeColorGroup');
+
+            colors.forEach((color) => {
+                // Font Color Boxes
+                const fBox = document.createElement('div');
+                fBox.className = 'color-box' + (color.hex === currentFontColor ? ' active' : '');
+                fBox.style.background = color.hex;
+                fBox.onclick = function() {
+                    document.querySelectorAll('#fontColorGroup .color-box').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFontColor = color.hex;
+                    document.getElementById('fontName').innerText = color.name;
+                    draw();
+                };
+                fontContainer.appendChild(fBox);
+
+                // Background Color (Stroke) Boxes
+                const sBox = document.createElement('div');
+                sBox.className = 'color-box' + (color.hex === currentStrokeColor ? ' active' : '');
+                sBox.style.background = color.hex;
+                sBox.onclick = function() {
+                    document.querySelectorAll('#strokeColorGroup .color-box').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentStrokeColor = color.hex;
+                    document.getElementById('bgName').innerText = color.name;
+                    draw();
+                };
+                strokeContainer.appendChild(sBox);
+            });
+        }
 
         function updateUI() {
             const input = document.getElementById('nameIn');
@@ -87,6 +179,7 @@
             const img = new Image();
             img.onload = () => { templateImg = img; canvas.width = img.width; canvas.height = img.height; draw(); };
             img.src = "KName.jpg"; 
+            setupColorPickers();
             loadFonts();
         }
         init();
@@ -95,15 +188,35 @@
             if (!templateImg) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(templateImg, 0, 0);
+            
             const name = document.getElementById('nameIn').value;
-            const size = document.getElementById('fontSize').value;
-            document.getElementById('sizeVal').innerText = size + "px";
+            const baseSize = parseFloat(document.getElementById('fontSize').value);
+            document.getElementById('sizeVal').innerText = baseSize + "px";
             if (!name) return;
-            ctx.fillStyle = "#22b9b9"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+            
+            ctx.textAlign = "center"; 
+            ctx.textBaseline = "middle";
+            ctx.lineJoin = "round";
+
             for (let i = 0; i < 9; i++) {
                 let row = Math.floor(i / cols); let col = i % cols;
                 let posX = startX + (col * xGap); let posY = startY + (row * yGap);
-                ctx.font = `${size}px k${i + 1}`;
+                
+                ctx.font = `${baseSize}px k${i + 1}`;
+
+                ctx.strokeStyle = currentStrokeColor;
+                ctx.lineWidth = baseSize * 0.25; 
+                ctx.shadowColor = "rgba(0, 0, 0, 0.35)"; 
+                ctx.shadowBlur = 10;                     
+                ctx.shadowOffsetX = 3;                    
+                ctx.shadowOffsetY = 3;                    
+                ctx.strokeText(name, posX, posY);
+
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.fillStyle = currentFontColor;
                 ctx.fillText(name, posX, posY);
             }
         }
