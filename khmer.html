@@ -92,10 +92,10 @@
         ];
 
         const cols = 4; 
-        const startX = 380; 
-        const startY = 410; 
+        const startX = 400; 
+        const startY = 400; 
         const xGap = 525;  
-        const yGap = 250; 
+        const yGap = 260; 
 
         let currentFontColor = "#000000";
         let currentStrokeColor = "#FFFFFF";
@@ -193,14 +193,32 @@
                 let row = Math.floor(i / cols); let col = i % cols;
                 let posX = startX + (col * xGap); let posY = startY + (row * yGap);
                 
+                // 1. MAIN PREVIEW
                 ctx.font = `${baseSize}px k${i + 1}`;
                 ctx.strokeStyle = currentStrokeColor;
                 ctx.lineWidth = baseSize * 0.25; 
-                ctx.shadowColor = "rgba(0, 0, 0, 0.35)"; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 3;
+                ctx.shadowColor = "rgba(0, 0, 0, 0.35)"; ctx.shadowBlur = 5; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
                 ctx.strokeText(name, posX, posY);
 
                 ctx.shadowColor = "transparent"; ctx.fillStyle = currentFontColor;
                 ctx.fillText(name, posX, posY);
+
+                // 2. NAME LABEL (Aligned Right-to-Left, Left of E Number)
+                ctx.fillStyle = "#75bcce";
+                ctx.font = "28px k5, sans-serif";
+                ctx.textAlign = "right"; 
+                ctx.fillText(name, posX - 55, posY + 105);
+
+                // 3. COLOR INFO
+                ctx.textAlign = "left";
+                ctx.font = "bold 16px sans-serif";
+                const labelX = posX + (ctx.measureText(name).width / 2) + 30;
+                const labelY = posY + 95;
+                
+                ctx.fillText(document.getElementById('bgName').innerText, labelX, labelY);
+                ctx.fillText(document.getElementById('fontName').innerText, labelX, labelY + 22);
+                
+                ctx.textAlign = "center";
             }
         }
 
